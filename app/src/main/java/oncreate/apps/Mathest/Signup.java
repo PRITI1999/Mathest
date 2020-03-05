@@ -1,3 +1,7 @@
+/*
+ Sign up  screen of the application
+*/
+
 package oncreate.apps.Mathest;
 
 import android.content.Context;
@@ -36,6 +40,8 @@ import oncreate.apps.Mathest.Wrappers.User;
 
 public class Signup extends AppCompatActivity {
 
+    private final String TAG = "Signup_Mathest";
+    // Async Task to download google sheet id created by the Mathest API
     public class Downloader extends AsyncTask<String, Void, String>{
 
         @Override
@@ -43,7 +49,7 @@ public class Signup extends AppCompatActivity {
 
             String result = "";
             URL url;
-            HttpURLConnection urlConnection = null;
+            HttpURLConnection urlConnection;
 
             try
             {
@@ -63,6 +69,7 @@ public class Signup extends AppCompatActivity {
             }
             catch(Exception e)
             {
+                Log.d(TAG,"Error accessing API , check logs");
                 e.printStackTrace();
             }
 
@@ -86,17 +93,19 @@ public class Signup extends AppCompatActivity {
             }
             catch (Exception e)
             {
-
+                Toast.makeText(Signup.this,"Error trying to retrieve JSON object, check logs",Toast.LENGTH_LONG).show();
             }
 
+            // Creating new User object
             User m_user = new User(name, sheetID, school, grade, UID);
 
+            // Signing up user
             firestoreDatabase.collection("users").document(UID).set(m_user).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
                     userAdded = true;
                     dialogHandler.hideDialog();
-                    Toast.makeText(getApplicationContext(), "User successfully added", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.signup_successful_message), Toast.LENGTH_LONG).show();
                     finish();
                 }
             });
@@ -104,7 +113,7 @@ public class Signup extends AppCompatActivity {
         }
     }
 
-    TextView UID_disp;
+    TextView UID_disp; // Textview to display the UID
     EditText nameEdit, schoolEdit, gradeEdit;
     FirebaseFirestore firestoreDatabase;
     String UID;
@@ -114,6 +123,8 @@ public class Signup extends AppCompatActivity {
     DialogHandler dialogHandler;
     List<String> listOfUIDs;
 
+
+    // Method to validate a UID so that a new user doesn't get an existing UID
     public void UIDValidator(final String UIDGenerated){
         listOfUIDs = new ArrayList<>();
         firestoreDatabase.collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -128,12 +139,13 @@ public class Signup extends AppCompatActivity {
                             UIDGenerator();
                         }
                     }
-                    UID_disp.setText("Your UID is: " + UID);
+                    UID_disp.setText(getString(R.string.uid_display) + " " + UID);
                 }
             }
         });
     }
 
+    // Generating a random UID
     public void UIDGenerator(){
         UID = String.valueOf((int)((Math.random() * 999) + 1));
         UIDValidator(UID);
@@ -144,33 +156,38 @@ public class Signup extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.signup);
 
+        // To avoid glitches in the interface, restricting the screen orientation to portrait
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        // Setting firebase cloud instance
         firestoreDatabase = FirebaseFirestore.getInstance();
 
+        // Finding all views by ids
         UID_disp = findViewById(R.id.UID_disp);
         nameEdit = findViewById(R.id.name_edit);
         schoolEdit = findViewById(R.id.school_edit);
         gradeEdit = findViewById(R.id.grade_edit);
         dialogHandler = new DialogHandler(this);
 
+        // Generate a UID
         UIDGenerator();
     }
 
     boolean nameEntered = false;
 
+    // Get all the information entered by the user into respective variables
     public void submitDetails(View view) {
         if(isNetworkConnected()) {
 
             if(nameEdit.getText().toString().equals("")) {
                 nameEdit.setHintTextColor(getResources().getColor(R.color.wrongAnswerColor));
-                nameEdit.setHint("Please provide Full Name");
+                nameEdit.setHint(getString(R.string.name_invalid_message));
             }else{
                 nameEntered = true;
                 name = nameEdit.getText().toString();
             }
             if(schoolEdit.getText().toString().equals("")){
-                school = "NA";
+                school = getString(R.string.na);
             }else {
                 school = schoolEdit.getText().toString();
             }
@@ -185,15 +202,15 @@ public class Signup extends AppCompatActivity {
                 dialogHandler.showDialog();
 
                 Downloader task = new Downloader();
-                task.execute(this.getString(R.string.mathest_azure_endpoint) + "sheet?uid=" + UID);
+                task.execute(this.getString(R.string.mathest_heroku_endpoint) + "sheet?uid=" + UID);
 
                 if (userAdded) {
-                    Toast.makeText(this, "Unable to add user, please try again..", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, getString(R.string.signup_unsuccessful_message), Toast.LENGTH_LONG).show();
                 }
             }
 
         }else{
-            Toast.makeText(this, "No internet detected", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.no_internet_message), Toast.LENGTH_LONG).show();
         }
     }
 

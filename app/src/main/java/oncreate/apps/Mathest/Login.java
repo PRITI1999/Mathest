@@ -1,3 +1,7 @@
+/*
+ Login screen of the application
+*/
+
 package oncreate.apps.Mathest;
 
 import android.content.Context;
@@ -24,30 +28,36 @@ import oncreate.apps.Mathest.UI.DialogHandler;
 
 public class Login extends AppCompatActivity {
 
-    final private String TAG = "Login_Mathest";
-    FirebaseFirestore firestoreDatabase;
-    EditText UIDInput;
-    String UID;
-    DialogHandler dialogHandler;
-    String sheetLink;
-    SharedPreferences sharedPreferences;
+    final private String TAG = "Login_Mathest"; // For debugging purpose
+    FirebaseFirestore firestoreDatabase; // Firebase cloud instance
+    EditText UIDInput; // To target UID edit text
+    String UID; // To store UID of the user
+    DialogHandler dialogHandler; // To handle the loading dialog
+    SharedPreferences sharedPreferences; // Shared preference instance
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
+        // To avoid glitches in the interface, restricting the screen orientation to portrait
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        // Setting up shared preferences
         sharedPreferences = this.getSharedPreferences("usercontent", Context.MODE_PRIVATE);
 
+        // Setting up firebase cloud instance
         firestoreDatabase = FirebaseFirestore.getInstance();
+        // Finding UID input edit text by id
         UIDInput = findViewById(R.id.UID_input);
 
+        // Setting up dialog handler
         dialogHandler = new DialogHandler(this);
 
+        // Getting UID from local storage
         String UID = sharedPreferences.getString("UID", "NA");
-        dialogHandler.showDialog();
+        dialogHandler.showDialog(); // Show the dialog
+        // If UID is not found locally, just hide the dialog else redirect to Home screen
         if (UID.contentEquals("NA")) {
             dialogHandler.hideDialog();
         } else {
@@ -59,11 +69,14 @@ public class Login extends AppCompatActivity {
 
     }
 
+    // Method to login a user
     public void loginUser(View view) {
         //TODO implement logic to sort out login into two classes, teacher and student.
         UID = UIDInput.getText().toString();
 
+        // If a UID was provided, proceed
         if (!UID.isEmpty()) {
+            // If network is available, proceed
             if (isNetworkConnected()) {
                 dialogHandler.showDialog();
                 firestoreDatabase.collection(getString(R.string.node_users))
@@ -104,10 +117,10 @@ public class Login extends AppCompatActivity {
                             }
                         });
             } else {
-                Toast.makeText(this, "No internet detected", Toast.LENGTH_LONG).show();
+                Toast.makeText(this,getString(R.string.no_internet_message), Toast.LENGTH_LONG).show();
             }
         } else {
-            Toast.makeText(this, "Please enter a valid UID", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.invalid_uid_message), Toast.LENGTH_LONG).show();
         }
 
 
@@ -118,7 +131,7 @@ public class Login extends AppCompatActivity {
         if(isNetworkConnected()) {
             startActivity(new Intent(this, Signup.class));
         }else {
-            Toast.makeText(this, "No internet detected", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.no_internet_message), Toast.LENGTH_LONG).show();
         }
     }
 

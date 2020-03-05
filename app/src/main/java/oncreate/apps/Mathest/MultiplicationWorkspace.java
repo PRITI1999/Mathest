@@ -1,3 +1,6 @@
+/*
+* Editor screen for multiplication*/
+
 package oncreate.apps.Mathest;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,7 +10,6 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -51,6 +53,7 @@ public class MultiplicationWorkspace extends AppCompatActivity {
     int[] resultUserArray = {-1, -1, -1, -1, -1, -1};
     int userAnswer = 0;
 
+    // Downloading the working of multiplication returned by the Mathest API
     public class Downloader extends AsyncTask<String, Void, String> {
 
         @Override
@@ -89,6 +92,7 @@ public class MultiplicationWorkspace extends AppCompatActivity {
             //Log.i("JSON", s);
             try{
 
+                // Setting all the parameters as returned by API
                 JSONArray jsonArray = new JSONArray(s);
                 JSONObject number1Details = jsonArray.getJSONObject(1);
                 JSONObject number2Details = jsonArray.getJSONObject(2);
@@ -154,6 +158,7 @@ public class MultiplicationWorkspace extends AppCompatActivity {
         }
     }
 
+    // To set user answer on Test screen when back button is pressed
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -162,20 +167,22 @@ public class MultiplicationWorkspace extends AppCompatActivity {
         }
     }
 
+    // Check the user working with the working of API whether it is correct or not
     public void checkBlocks(View view){
 
         if(!isNetworkConnected()){
-            Toast.makeText(this, "No internet detected", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.no_internet_message), Toast.LENGTH_LONG).show();
             return;
         }
 
         boolean workingCorrectFlag = true, answerCorrectFlag = true;
 
         if(noAnswerEntered()){
-            Toast.makeText(this, "Please enter an answer!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.provide_answer_hint), Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Get the user working in respective variables
         if(number11.getText().toString().equals("")){
             number1UserArray[0] = -1;
         }else{
@@ -392,35 +399,7 @@ public class MultiplicationWorkspace extends AppCompatActivity {
             resultUserArray[5] = Integer.valueOf(result6.getText().toString());
         }
 
-        /*for(int i = 0; i < 3; ++i){
-            System.out.print(number1UserArray[i] + " ");
-        }
-        System.out.println();
-        for(int i = 0; i < 3; ++i){
-            System.out.print(number2UserArray[i] + " ");
-        }
-        System.out.println();
-        for(int i = 0; i < 6; ++i){
-            System.out.print(carryUserArray[i] + " ");
-        }
-        System.out.println();
-        for(int i = 0; i < 6; ++i){
-            System.out.print(subnum1UserArray[i] + " ");
-        }
-        System.out.println();
-        for(int i = 0; i < 6; ++i){
-            System.out.print(subnum2UserArray[i] + " ");
-        }
-        System.out.println();
-        for(int i = 0; i < 6; ++i){
-            System.out.print(subnum3UserArray[i] + " ");
-        }
-        System.out.println();
-        for(int i = 0; i < 6; ++i){
-            System.out.print(resultUserArray[i] + " ");
-        }
-        System.out.println();*/
-
+        // If a digit is wrong set it to red
         for(int i = 0; i < 3; ++i){
             if(number1UserArray[i] != number1Array[i]){
                 workingCorrectFlag = false;
@@ -728,9 +707,9 @@ public class MultiplicationWorkspace extends AppCompatActivity {
         }
 
         if(answerCorrectFlag){
-            String message = "Congratulations! Your answer is correct!";
+            String message = getString(R.string.correct_answer_message);
             if(workingCorrectFlag) {
-                message = "Congratulations! You did it absolutely right!";
+                message = getString(R.string.working_correct_message);
             }
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         }
@@ -746,16 +725,18 @@ public class MultiplicationWorkspace extends AppCompatActivity {
         return cm.getActiveNetworkInfo() != null;
     }
 
+    // To check if an answer is entered by the user
     public boolean noAnswerEntered(){
         return result1.getText().toString().equals("") && result2.getText().toString().equals("") &&
                 result3.getText().toString().equals("") && result4.getText().toString().equals("") &&
                 result5.getText().toString().equals("") && result6.getText().toString().equals("");
     }
 
+    // Save the answer entered by the user
     public void saveAnswer(View view){
 
         if(!isNetworkConnected()){
-            Toast.makeText(this, "No internet detected", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.no_internet_message), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -767,7 +748,7 @@ public class MultiplicationWorkspace extends AppCompatActivity {
         }
         while(i < 6){
             if(resultUserArray[i] == -1){
-                Toast.makeText(this, "This is not a valid answer! Try again.",
+                Toast.makeText(this, getString(R.string.invalid_answer_message),
                         Toast.LENGTH_SHORT).show();
                 userAnswer = 0;
                 return;
@@ -805,6 +786,7 @@ public class MultiplicationWorkspace extends AppCompatActivity {
 
         questionBodyTextView = findViewById(R.id.questionBodyMultiplicationWorkspace);
 
+        // Getting the two numbers to work upon via Intent
         Intent intent = getIntent();
         number1 = intent.getStringExtra("number1");
         number2 = intent.getStringExtra("number2");
@@ -812,11 +794,12 @@ public class MultiplicationWorkspace extends AppCompatActivity {
 
         questionBodyTextView.setText("Multiply " + number1 + " and " + number2);
 
+        // If network is available download the working from API
         if(isNetworkConnected()) {
             Downloader downloader = new Downloader();
-            downloader.execute(this.getString(R.string.mathest_azure_endpoint) + "multiplication-working?uid=" + UID + "&number1=" + number1 + "&number2=" + number2);
+            downloader.execute(this.getString(R.string.mathest_heroku_endpoint) + "multiplication-working?uid=" + UID + "&number1=" + number1 + "&number2=" + number2);
         }else{
-            Toast.makeText(this, "No internet detected", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.no_internet_message), Toast.LENGTH_LONG).show();
         }
 
         number11 = findViewById(R.id.number1_digit1);
@@ -857,16 +840,19 @@ public class MultiplicationWorkspace extends AppCompatActivity {
         result6 = findViewById(R.id.result_digit6);
 
     }
+    // To enable the question digit by setting it to black
     public void questionEnable(View view){
         view.setBackground(getResources().getDrawable(R.drawable.question_digit_enable));
         view.setFocusableInTouchMode(true);
         view.requestFocus();
     }
+    // To enable the answer digit by setting it to green
     public void answerEnable(View view){
         view.setBackground(getResources().getDrawable(R.drawable.answer_digit_enable));
         view.setFocusableInTouchMode(true);
         view.requestFocus();
     }
+    // Repaint the whole screen
     public void repaint(View view){
         Intent intent = new Intent(this, MultiplicationWorkspace.class);
         intent.putExtra("number1", number1);
